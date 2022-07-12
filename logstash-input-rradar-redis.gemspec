@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
 
-  s.name            = 'logstash-input-rradar-redis'
+  s.name            = 'logstash-input-rradar'
   s.version         = '3.7.0-beta-v1'
   # s.licenses        = ['Apache License (2.0)']
   s.summary         = "Reads events from a Redis instance"

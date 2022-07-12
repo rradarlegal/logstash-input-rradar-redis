@@ -17,10 +17,10 @@ require "stud/interval"
 # `batch_count` note: If you use the `batch_count` setting, you *must* use a Redis version 2.6.0 or
 # newer. Anything older does not support the operations used by batching.
 #
-module LogStash module Inputs class Rredis < LogStash::Inputs::Threadable
+module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   BATCH_EMPTY_SLEEP = 0.25
 
-  config_name "rredis"
+  config_name "rradar"
 
   default :codec, "json"
 

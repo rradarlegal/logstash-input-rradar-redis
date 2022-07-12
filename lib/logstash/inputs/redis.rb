@@ -129,7 +129,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
     # ::Redis.new(redis_params)
     sentinel = [{host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}, {host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}, {host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}]
 
-    ::Redis.new(url: ENV.fetch("REDIS_URL"), sentinels: sentinel, role: :master, db: 2)
+    ::Redis.new(url: "redis://redismaster", sentinels: sentinel, role: :master, db: 2)
   end
 
   # private

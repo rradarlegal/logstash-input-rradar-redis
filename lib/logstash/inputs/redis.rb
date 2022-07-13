@@ -27,6 +27,9 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   # The hostname of your Redis server.
   config :host, :validate => :string, :default => "127.0.0.1"
 
+
+  config :sentinels, :validate => :string
+  
   # The port to connect on.
   config :port, :validate => :number, :default => 6379
 
@@ -63,7 +66,13 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   public
 
   def register
-    @redis_url = @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
+    #@redis_url = @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
+
+    @redis_url = if @sentinels.nil?
+                   @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
+                 else
+                   "redis://@#{@host}"
+                 end
 
     # just switch on data_type once
     if @data_type == 'list' || @data_type == 'dummy'
@@ -122,14 +131,14 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
       params[:path] = @path
     end
 
+    params[:sentinels] = @sentinels unless @sentinels.nil?
+
     params
   end
 
   def new_redis_instance
-    # ::Redis.new(redis_params)
-    sentinel = [{host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}, {host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}, {host: 'redis-cluster-headless.default.svc.cluster.local', port: 26379}]
-
-    ::Redis.new(url: "redis://redismaster", sentinels: sentinel, role: :master, db: 2)
+    @logger.warn("Redis Params:- #{redis_params}") 
+    ::Redis.new(redis_params)
   end
 
   # private

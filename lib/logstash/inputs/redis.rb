@@ -28,7 +28,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :host, :validate => :string, :default => "127.0.0.1"
 
 
-  config :sentinels, :validate => :string
+  config :sentinels, :validate => :array
   
   # The port to connect on.
   config :port, :validate => :number, :default => 6379

@@ -27,11 +27,13 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   # The hostname of your Redis server.
   config :host, :validate => :string, :default => "127.0.0.1"
 
+  config :sentinels, :validate => :array
 
-  config :sentinels, :validate => :string
-  
   # The port to connect on.
   config :port, :validate => :number, :default => 6379
+
+  # Each sentinel port.
+  config :sentinel_port, validate: :number, default: 26_379
 
   # SSL
   config :ssl, :validate => :boolean, :default => false
@@ -66,8 +68,6 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   public
 
   def register
-    #@redis_url = @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
-
     @redis_url = if @sentinels.nil?
                    @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
                  else
@@ -123,21 +123,29 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
         :ssl => @ssl
     }
 
-    if @path.nil?
+    if @path.nil? && sentinels.nil?
       params[:host] = @host
       params[:port] = @port
+    elsif @path.nil? && sentinels
+      params[:url] = "redis://#{@host}"
+      params[:role] = :master
+      params[:sentinels] = sentinels_connection_params
     else
       @logger.warn("Parameter 'path' is set, ignoring parameters: 'host' and 'port'")
       params[:path] = @path
     end
 
-    params[:sentinels] = @sentinels unless @sentinels.nil?
-
     params
   end
 
+  def sentinels_connection_params
+    @sentinels.map do |sentinel|
+      { host: sentinel, port: 26_379 }
+    end
+  end
+
   def new_redis_instance
-    @logger.warn("Redis Params:- #{redis_params}") 
+    @logger.warn("Redis Params:- #{redis_params}")
     ::Redis.new(redis_params)
   end
 

@@ -18,6 +18,7 @@ require "stud/interval"
 # newer. Anything older does not support the operations used by batching.
 #
 module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
+
   BATCH_EMPTY_SLEEP = 0.25
 
   config_name "rradar"
@@ -27,6 +28,16 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   # The hostname of your Redis server.
   config :host, :validate => :string, :default => "127.0.0.1"
 
+  # Redis sentinel host
+  config :sentinel_host => :string, :default => 'redismaster'
+
+  # Redis sentinel count
+  config :sentinel_count => :number, :default => 3
+
+  # Redis app name
+  config :name, :validate => :string
+
+  # Sentinel host
   config :sentinels, :validate => :array
 
   # The port to connect on.
@@ -88,7 +99,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
 
     @list_method = batched? ? method(:list_batch_listener) : method(:list_single_listener)
 
-    @identity = "#{@redis_url} #{@data_type}:#{@key}"
+    @identity = "#{name} - #{@redis_url} - #{@data_type}:#{@key}"
     @logger.info("Registering Redis", :identity => @identity)
   end # def register
 
@@ -127,7 +138,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
       params[:host] = @host
       params[:port] = @port
     elsif @path.nil? && sentinels
-      params[:url] = "redis://#{@host}"
+      params[:url] = "redis://#{@sentinel_host}"
       params[:role] = :master
       params[:sentinels] = sentinels_connection_params
     else
@@ -139,8 +150,8 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   end
 
   def sentinels_connection_params
-    @sentinels.map do |sentinel|
-      { host: sentinel, port: 26_379 }
+    @sentinels_count.times do
+      { host: @sentinel, port: @sentinel_port }
     end
   end
 

@@ -29,7 +29,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :host, :validate => :string, :default => "127.0.0.1"
 
   # Redis sentinel host
-  config :sentinel_url => :string
+  config :sentinel_host => :string
 
   # Redis sentinel count
   config :sentinel_count => :number, :default => 3
@@ -82,7 +82,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
     @redis_url = if @sentinels.nil?
                    @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
                  else
-                   "redis://@#{@sentinel_url}"
+                   "redis://@#{@sentinel_host}"
                  end
 
     # just switch on data_type once
@@ -134,11 +134,11 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
         :ssl => @ssl
     }
 
-    if @path.nil? && sentinel_url.nil?
+    if @path.nil? && @sentinel_host.nil?
       params[:host] = @host
       params[:port] = @port
-    elsif @path.nil? && sentinel_url
-      params[:url] = "redis://#{sentinel_url}"
+    elsif @path.nil? && @sentinel_host
+      params[:url] = "redis://#{@sentinel_host}"
       params[:role] = :master
       params[:sentinels] = sentinels_connection_params
     else

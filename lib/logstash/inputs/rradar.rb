@@ -38,7 +38,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :sentinel_port, validate: :number, default: 26_379
 
   # Sentinel host
-  config :sentinels, :validate => :string, :default => 'redis-cluster-headless.app.svc.cluster.local'
+  config :sentinel, :validate => :string, :default => 'redis-cluster-headless.app.svc.cluster.local'
 
   # Redis app name
   config :name, :validate => :string
@@ -140,7 +140,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
     elsif @path.nil? && @sentinel_host
       params[:url] = "redis://#{@sentinel_host}"
       params[:role] = :master
-      params[:sentinels] = sentinels_connection_params
+      params[:sentinels] = sentinel_connection_params
     else
       @logger.warn("Parameter 'path' is set, ignoring parameters: 'host' and 'port'")
       params[:path] = @path
@@ -149,8 +149,8 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
     params
   end
 
-  def sentinels_connection_params
-    @sentinels_count.times do
+  def sentinel_connection_params
+    @sentinel_count.times.map do
       { host: @sentinels, port: @sentinel_port }
     end
   end

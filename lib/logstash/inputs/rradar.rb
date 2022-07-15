@@ -38,7 +38,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :name, :validate => :string
 
   # Sentinel host
-  config :sentinels, :validate => :string
+  config :sentinels, :validate => :string, :default => 'redis-cluster-headless.app.svc.cluster.local'
 
   # The port to connect on.
   config :port, :validate => :number, :default => 6379

@@ -29,10 +29,10 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :host, :validate => :string, :default => "127.0.0.1"
 
   # Redis sentinel host
-  config :sentinel_host => :string
+  config :sentinel_host, :validate => :string
 
   # Redis sentinel count
-  config :sentinel_count => :number, :default => 3
+  config :sentinel_count, :validate => :number, :default => 3
 
   # Each sentinel port.
   config :sentinel_port, validate: :number, default: 26_379

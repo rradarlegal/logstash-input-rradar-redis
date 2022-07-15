@@ -134,11 +134,11 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
         :ssl => @ssl
     }
 
-    if @path.nil? && @sentinel_url.nil?
+    if @path.nil? && sentinel_url.nil?
       params[:host] = @host
       params[:port] = @port
-    elsif @path.nil? && @sentinel_url
-      params[:url] = "redis://#{@sentinel_url}"
+    elsif @path.nil? && sentinel_url
+      params[:url] = "redis://#{sentinel_url}"
       params[:role] = :master
       params[:sentinels] = sentinels_connection_params
     else

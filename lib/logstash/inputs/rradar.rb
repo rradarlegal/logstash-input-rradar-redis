@@ -29,22 +29,22 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
   config :host, :validate => :string, :default => "127.0.0.1"
 
   # Redis sentinel host
-  config :sentinel_host => :string, :default => 'redismaster'
+  config :sentinel_url => :string
 
   # Redis sentinel count
   config :sentinel_count => :number, :default => 3
 
-  # Redis app name
-  config :name, :validate => :string
+  # Each sentinel port.
+  config :sentinel_port, validate: :number, default: 26_379
 
   # Sentinel host
   config :sentinels, :validate => :string, :default => 'redis-cluster-headless.app.svc.cluster.local'
 
+  # Redis app name
+  config :name, :validate => :string
+
   # The port to connect on.
   config :port, :validate => :number, :default => 6379
-
-  # Each sentinel port.
-  config :sentinel_port, validate: :number, default: 26_379
 
   # SSL
   config :ssl, :validate => :boolean, :default => false
@@ -82,7 +82,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
     @redis_url = if @sentinels.nil?
                    @path.nil? ? "redis://#{@password}@#{@host}:#{@port}/#{@db}" : "#{@password}@#{@path}/#{@db}"
                  else
-                   "redis://@#{@host}"
+                   "redis://@#{@sentinel_url}"
                  end
 
     # just switch on data_type once
@@ -134,11 +134,11 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
         :ssl => @ssl
     }
 
-    if @path.nil? && sentinels.nil?
+    if @path.nil? && @sentinel_url.nil?
       params[:host] = @host
       params[:port] = @port
-    elsif @path.nil? && sentinels
-      params[:url] = "redis://#{@sentinel_host}"
+    elsif @path.nil? && @sentinel_url
+      params[:url] = "redis://#{@sentinel_url}"
       params[:role] = :master
       params[:sentinels] = sentinels_connection_params
     else
@@ -151,7 +151,7 @@ module LogStash module Inputs class Rradar < LogStash::Inputs::Threadable
 
   def sentinels_connection_params
     @sentinels_count.times do
-      { host: @sentinel, port: @sentinel_port }
+      { host: @sentinels, port: @sentinel_port }
     end
   end
 
